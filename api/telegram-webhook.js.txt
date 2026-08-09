@@ -1,0 +1,58 @@
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(200).send('Telegram Meta CAPI Webhook is Active!');
+  }
+
+  const body = req.body;
+
+  // 👇 YAHAN APNA BOT FATHER SE MILA BOT TOKEN DALEIN:
+  const BOT_TOKEN = "8352223895:AAHteFu6DYxKhVrKMuRGO79_wbkcdKxWfw8"; 
+  
+  const PIXEL_ID = "1418629833467614";               
+  const ACCESS_TOKEN = "EAATCZANWBwMEBSFUN5pSa2voq0eAt1TnLdHDpFhNqQaGLTYfotxyQ7LjFFZC5exlQAyU577WAlIUueAN5jUP3GX1Ooa1FRpcqKWVrAZBCndrzOkouiHvSEZBfBJHomKeZCsy4PJ8eYqmZAOMupfvWZACgNvfPhThRPKpOaZAZCLcXxmz8Sv0xZAvEVezFJ1ssXOgZDZD";
+
+  try {
+    if (body.chat_join_request) {
+      const joinRequest = body.chat_join_request;
+      const chatId = joinRequest.chat.id;
+      const userId = joinRequest.from.id;
+
+      // 1. Auto-Approve Telegram Join Request
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/approveChatJoinRequest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'Application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          user_id: userId
+        })
+      });
+
+      // 2. Fire Meta CAPI Event (Subscribe)
+      const eventId = `tg_join_${userId}_${Math.floor(Date.now() / 1000)}`;
+
+      const capiPayload = {
+        data: [
+          {
+            event_name: 'Subscribe',
+            event_time: Math.floor(Date.now() / 1000),
+            event_id: eventId,
+            action_source: 'system_generated',
+            user_data: {
+              external_id: [String(userId)]
+            }
+          }
+        ]
+      };
+
+      await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(capiPayload)
+      });
+    }
+  } catch (error) {
+    console.error('Error in Webhook:', error);
+  }
+
+  return res.status(200).json({ status: 'success' });
+}
