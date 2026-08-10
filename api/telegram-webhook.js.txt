@@ -30,14 +30,15 @@ export default async function handler(req, res) {
       // Meta Conversions API (CAPI) Trigger
       const capiUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`;
       
-      await fetch(capiUrl, {
+      const capiResponse = await fetch(capiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           data: [{
             event_name: 'Subscribe',
             event_time: Math.floor(Date.now() / 1000),
-            action_source: 'system_generated',
+            action_source: 'website',
+            event_source_url: 'https://x-sureshot-testing-com.vercel.app/',
             user_data: {
               external_id: [String(userId)]
             }
@@ -45,6 +46,9 @@ export default async function handler(req, res) {
           test_event_code: TEST_CODE
         })
       });
+
+      const capiResult = await capiResponse.json();
+      console.log('Meta CAPI Response:', capiResult);
 
       // Supabase Analytics Dashboard Log
       await fetch('https://uybcfnjlpqrqlnppsvww.supabase.co/rest/v1/campaign_stats', {
@@ -57,7 +61,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           event_type: 'telegram_join',
           user_id: String(userId),
-          status: 'Member Joined & CAPI Test Fired'
+          status: JSON.stringify(capiResult)
         })
       });
     }
