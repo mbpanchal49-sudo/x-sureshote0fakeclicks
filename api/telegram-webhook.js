@@ -42,8 +42,8 @@ export default async function handler(req, res) {
             user_data: {
               external_id: [String(userId)]
             }
-          }],
-          test_event_code: TEST_CODE
+          }]
+          
         })
       });
 
