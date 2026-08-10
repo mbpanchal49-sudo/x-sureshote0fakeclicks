@@ -1,58 +1,70 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(200).send('Telegram Meta CAPI Webhook is Active!');
+    return res.status(200).json({ status: 'Webhook Active' });
   }
 
-  const body = req.body;
-
-  // 👇 YAHAN APNA BOT FATHER SE MILA BOT TOKEN DALEIN:
-  const BOT_TOKEN = "8352223895:AAHteFu6DYxKhVrKMuRGO79_wbkcdKxWfw8"; 
-  
-  const PIXEL_ID = "1418629833467614";               
-  const ACCESS_TOKEN = "EAATCZANWBwMEBSFUN5pSa2voq0eAt1TnLdHDpFhNqQaGLTYfotxyQ7LjFFZC5exlQAyU577WAlIUueAN5jUP3GX1Ooa1FRpcqKWVrAZBCndrzOkouiHvSEZBfBJHomKeZCsy4PJ8eYqmZAOMupfvWZACgNvfPhThRPKpOaZAZCLcXxmz8Sv0xZAvEVezFJ1ssXOgZDZD";
-
   try {
-    if (body.chat_join_request) {
-      const joinRequest = body.chat_join_request;
-      const chatId = joinRequest.chat.id;
-      const userId = joinRequest.from.id;
+    const update = req.body;
 
-      // 1. Auto-Approve Telegram Join Request
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/approveChatJoinRequest`, {
+    let userId = null;
+
+    // 1. Direct Member Join Detect Karo
+    if (update.chat_member) {
+      const newStatus = update.chat_member.new_chat_member.status;
+      const oldStatus = update.chat_member.old_chat_member.status;
+
+      if (['member'].includes(newStatus) && ['left', 'kicked', 'restricted'].includes(oldStatus)) {
+        userId = update.chat_member.new_chat_member.user.id;
+      }
+    } 
+    // 2. Join Request Detect Karo (Fallback)
+    else if (update.chat_join_request) {
+      userId = update.chat_join_request.from.id;
+    }
+
+    if (userId) {
+      const PIXEL_ID = "1418629833467614";
+      const ACCESS_TOKEN = "EAATCZANWBwMEBSPRuIAdvrKEgvDsSdLbWhdHHJFknu7K8gAYGCIV9IEMLTvIsPqkFZBEExgDo1qX9aQKXYs9QP2ocmD8pkIczUzPPKw9LU2obbukMAXzbrBmjqjmkAtiNbBaGymOOhvrPc2mZCZBmkQeVnjsWtiSSHfxSSo5EuKeCpZApqolcjeJQK7UV2AZDZD";
+      const TEST_CODE = "TEST41060";
+
+      // Meta Conversions API (CAPI) Trigger
+      const capiUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`;
+      
+      await fetch(capiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'Application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: chatId,
-          user_id: userId
-        })
-      });
-
-      // 2. Fire Meta CAPI Event (Subscribe)
-      const eventId = `tg_join_${userId}_${Math.floor(Date.now() / 1000)}`;
-
-      const capiPayload = {
-        data: [
-          {
+          data: [{
             event_name: 'Subscribe',
             event_time: Math.floor(Date.now() / 1000),
-            event_id: eventId,
             action_source: 'system_generated',
             user_data: {
               external_id: [String(userId)]
             }
-          }
-        ]
-      };
+          }],
+          test_event_code: TEST_CODE
+        })
+      });
 
-      await fetch(`https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`, {
+      // Supabase Analytics Dashboard Log
+      await fetch('https://uybcfnjlpqrqlnppsvww.supabase.co/rest/v1/campaign_stats', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(capiPayload)
+        headers: {
+          'apikey': 'sb_publishable_amAdJgwMkcko1NcwFvkOcA_zgVyMZnD',
+          'Authorization': 'Bearer sb_publishable_amAdJgwMkcko1NcwFvkOcA_zgVyMZnD',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event_type: 'telegram_join',
+          user_id: String(userId),
+          status: 'Member Joined & CAPI Test Fired'
+        })
       });
     }
-  } catch (error) {
-    console.error('Error in Webhook:', error);
-  }
 
-  return res.status(200).json({ status: 'success' });
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    console.error('Webhook Error:', error);
+    return res.status(500).json({ error: error.message });
+  }
 }
