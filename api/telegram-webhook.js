@@ -8,6 +8,10 @@ export default async function handler(req, res) {
 
     let userId = null;
     let userName = 'Telegram User';
+    let inviteLinkUsed = null;
+
+    // AAPKA UNIQUE INVITE LINK FILTER
+    const MY_INVITE_LINK = "https://t.me/+JasEYKHjpqxhMjFl";
 
     // 1. Direct Member Join Detect Karo
     if (update.chat_member) {
@@ -18,16 +22,25 @@ export default async function handler(req, res) {
         userId = update.chat_member.new_chat_member.user.id;
         const u = update.chat_member.new_chat_member.user;
         userName = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : 'Telegram User';
+        
+        // Link Extract
+        inviteLinkUsed = update.chat_member.invite_link ? update.chat_member.invite_link.invite_link : null;
       }
     } 
-    // 2. Join Request Detect Karo (Fallback)
+    // 2. Join Request Detect Karo (Main Flow)
     else if (update.chat_join_request) {
       userId = update.chat_join_request.from.id;
       const u = update.chat_join_request.from;
       userName = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : 'Telegram User';
+      
+      // Link Extract
+      inviteLinkUsed = update.chat_join_request.invite_link ? update.chat_join_request.invite_link.invite_link : null;
     }
 
-    if (userId) {
+    // FILTER CHECK: Sirf tabhi aage badho jab Join request AAPKE Specific Link se aayi ho!
+    if (userId && inviteLinkUsed === MY_INVITE_LINK) {
+      console.log(`Matched Join Request from ${userName} via ${MY_INVITE_LINK}`);
+
       const PIXEL_ID = "1418629833467614";
       const ACCESS_TOKEN = "EAATCZANWBwMEBSPRuIAdvrKEgvDsSdLbWhdHHJFknu7K8gAYGCIV9IEMLTvIsPqkFZBEExgDo1qX9aQKXYs9QP2ocmD8pkIczUzPPKw9LU2obbukMAXzbrBmjqjmkAtiNbBaGymOOhvrPc2mZCZBmkQeVnjsWtiSSHfxSSo5EuKeCpZApqolcjeJQK7UV2AZDZD";
 
@@ -53,7 +66,7 @@ export default async function handler(req, res) {
       const capiResult = await capiResponse.json();
       console.log('Meta CAPI Response:', capiResult);
 
-      // FIREBASE FIRESTORE ANALYTICS LOG (Replaced Supabase)
+      // FIREBASE FIRESTORE ANALYTICS LOG
       const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/x-sure-shote-checkking/databases/(default)/documents/campaign_stats';
       
       await fetch(firestoreUrl, {
@@ -71,6 +84,8 @@ export default async function handler(req, res) {
           }
         })
       });
+    } else if (userId) {
+      console.log(`Ignored join request from another link: ${inviteLinkUsed}`);
     }
 
     return res.status(200).json({ success: true });
