@@ -32,33 +32,36 @@
     const SUPABASE_KEY = "sb_publishable_L9xIG5fVx6miGJ8kCtULuw_QJYEO-C3";
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 1. Automatic Visitor Count (Page Load Hote Hi Dashboard me Jayega)
+    // 1. Automatic Visitor Count (Matches exact database schema)
     window.addEventListener('DOMContentLoaded', async () => {
         try {
-            await db.from('campaign_stats').insert([
-                { event_type: 'visitor', campaign: 'X SURE SHOTS CHANNEL' }
+            const { data, error } = await db.from('campaign_stats').insert([
+                { event_type: 'visitor', status: 'active' }
             ]);
-            console.log('Visitor tracked successfully!');
+            if(error) console.error('Supabase Visitor Error:', error);
+            else console.log('Visitor recorded successfully!');
         } catch(err) {
-            console.error('Visitor Track Error:', err);
+            console.error('Visitor Exception:', err);
         }
     });
 
-    // 2. Button Click Handler (Dashboard me Click + Meta me Subscribe Event Bheje Ga)
+    // 2. Button Click Handler (Meta Pixel + Supabase)
     async function handleTelegramClick(e) {
-        // Meta Ads Pixel Event Fire
+        // Meta Ads Pixel Event
         if (typeof fbq !== 'undefined') {
             fbq('track', 'Subscribe');
             fbq('track', 'Lead');
         }
 
-        // Supabase Database Click Entry
+        // Supabase Database Entry
         try {
-            await db.from('campaign_stats').insert([
-                { event_type: 'click', campaign: 'X SURE SHOTS CHANNEL' }
+            const { data, error } = await db.from('campaign_stats').insert([
+                { event_type: 'click', status: 'active' }
             ]);
+            if(error) console.error('Supabase Click Error:', error);
+            else console.log('Click recorded successfully!');
         } catch(err) {
-            console.error('Click Track Error:', err);
+            console.error('Click Exception:', err);
         }
     }
   </script>
