@@ -25,50 +25,52 @@
   </noscript>
   <!-- End Meta Pixel Code -->
 
-  <!-- SUPABASE DIRECT REST API TRACKER (BYPASSES SDK & RLS ISSUES) -->
+  <!-- GOOGLE FIRESTORE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <script>
-    const SUPABASE_URL = "https://nfqpsufusbzdfaclldut.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_L9xIG5fVx6miGJ8kCtULuw_QJYEO-C3";
+    // AAPKI EXACT FIREBASE CONFIG KEYS
+    const firebaseConfig = {
+      apiKey: "AIzaSyBF29cqyN_SaBPj9hPU6PinKkyHS3j76oU",
+      authDomain: "x-sure-shote-checkking.firebaseapp.com",
+      projectId: "x-sure-shote-checkking",
+      storageBucket: "x-sure-shote-checkking.firebasestorage.app",
+      messagingSenderId: "979303679957",
+      appId: "1:979303679957:web:0bca44829bbeb54f56df5c",
+      measurementId: "G-147DV2PNX5"
+    };
 
-    async function sendAnalytics(eventType) {
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/campaign_stats`, {
-                method: "POST",
-                headers: {
-                    "apikey": SUPABASE_KEY,
-                    "Authorization": `Bearer ${SUPABASE_KEY}`,
-                    "Content-Type": "application/json",
-                    "Prefer": "return=minimal"
-                },
-                body: JSON.stringify({ event_type: eventType })
-            });
+    // Firebase Initialize
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            if (response.ok) {
-                console.log(`✅ Success: ${eventType} recorded in Supabase!`);
-            } else {
-                const errText = await response.text();
-                console.error(`❌ Supabase Error (${response.status}):`, errText);
-            }
-        } catch (err) {
-            console.error("Network Exception:", err);
-        }
+    // Event Recording Function (Firestore)
+    function sendFirestoreEvent(eventType) {
+        db.collection("campaign_stats").add({
+            event_type: eventType,
+            created_at: new Date().toISOString()
+        })
+        .then((docRef) => {
+            console.log(`✅ Google Firebase Success: ${eventType} saved! ID:`, docRef.id);
+        })
+        .catch((error) => {
+            console.error("❌ Firestore Error:", error);
+        });
     }
 
-    // 1. Automatic Visitor Entry on Page Load
+    // 1. Visitor Track on Load
     window.addEventListener('DOMContentLoaded', () => {
-        sendAnalytics('visitor');
+        sendFirestoreEvent('visitor');
     });
 
-    // 2. Button Click Handler (Meta Pixel + Supabase)
+    // 2. Click Track on Button Click
     function handleTelegramClick(e) {
-        // Meta Ads Pixel Event
         if (typeof fbq !== 'undefined') {
             fbq('track', 'Subscribe');
             fbq('track', 'Lead');
         }
-
-        // Send Click Event to Supabase
-        sendAnalytics('click');
+        sendFirestoreEvent('click');
     }
   </script>
 
@@ -191,7 +193,7 @@
     <h1>X SURE SHOTE</h1>
     <p>Join our premium Telegram community with a clean, modern experience and instant updates.</p>
 
-    <!-- MAIN TELEGRAM BUTTON (WITH TRACKING) -->
+    <!-- MAIN TELEGRAM BUTTON -->
     <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl" onclick="handleTelegramClick(event)">🚀 JOIN TELEGRAM</a>
 
     <div class="stats">
@@ -206,7 +208,7 @@
       <div class="feature">🛡️ Secure & Mobile Friendly</div>
     </div>
 
-    <!-- SECONDARY JOIN BUTTON (WITH TRACKING) -->
+    <!-- SECONDARY JOIN BUTTON -->
     <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl" onclick="handleTelegramClick(event)">JOIN NOW</a>
   </div>
 </div>
