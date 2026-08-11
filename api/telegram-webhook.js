@@ -7,6 +7,7 @@ export default async function handler(req, res) {
     const update = req.body;
 
     let userId = null;
+    let userName = 'Telegram User';
 
     // 1. Direct Member Join Detect Karo
     if (update.chat_member) {
@@ -15,17 +16,20 @@ export default async function handler(req, res) {
 
       if (['member'].includes(newStatus) && ['left', 'kicked', 'restricted'].includes(oldStatus)) {
         userId = update.chat_member.new_chat_member.user.id;
+        const u = update.chat_member.new_chat_member.user;
+        userName = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : 'Telegram User';
       }
     } 
     // 2. Join Request Detect Karo (Fallback)
     else if (update.chat_join_request) {
       userId = update.chat_join_request.from.id;
+      const u = update.chat_join_request.from;
+      userName = u.first_name ? `${u.first_name} ${u.last_name || ''}`.trim() : 'Telegram User';
     }
 
     if (userId) {
       const PIXEL_ID = "1418629833467614";
       const ACCESS_TOKEN = "EAATCZANWBwMEBSPRuIAdvrKEgvDsSdLbWhdHHJFknu7K8gAYGCIV9IEMLTvIsPqkFZBEExgDo1qX9aQKXYs9QP2ocmD8pkIczUzPPKw9LU2obbukMAXzbrBmjqjmkAtiNbBaGymOOhvrPc2mZCZBmkQeVnjsWtiSSHfxSSo5EuKeCpZApqolcjeJQK7UV2AZDZD";
-      const TEST_CODE = "TEST41060";
 
       // Meta Conversions API (CAPI) Trigger
       const capiUrl = `https://graph.facebook.com/v18.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`;
@@ -43,25 +47,28 @@ export default async function handler(req, res) {
               external_id: [String(userId)]
             }
           }]
-          
         })
       });
 
       const capiResult = await capiResponse.json();
       console.log('Meta CAPI Response:', capiResult);
 
-      // Supabase Analytics Dashboard Log
-      await fetch('https://uybcfnjlpqrqlnppsvww.supabase.co/rest/v1/campaign_stats', {
+      // FIREBASE FIRESTORE ANALYTICS LOG (Replaced Supabase)
+      const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/x-sure-shote-checkking/databases/(default)/documents/campaign_stats';
+      
+      await fetch(firestoreUrl, {
         method: 'POST',
         headers: {
-          'apikey': 'sb_publishable_amAdJgwMkcko1NcwFvkOcA_zgVyMZnD',
-          'Authorization': 'Bearer sb_publishable_amAdJgwMkcko1NcwFvkOcA_zgVyMZnD',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          event_type: 'telegram_join',
-          user_id: String(userId),
-          status: JSON.stringify(capiResult)
+          fields: {
+            event_type: { stringValue: 'telegram_join' },
+            user_id: { stringValue: String(userId) },
+            user_name: { stringValue: userName },
+            status: { stringValue: JSON.stringify(capiResult) },
+            created_at: { stringValue: new Date().toISOString() }
+          }
         })
       });
     }
