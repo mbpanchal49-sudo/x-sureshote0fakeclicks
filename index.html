@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>X SURE SHOTE</title>
 
-  <!-- NEW META PIXEL CODE (ID: 1418629833467614) -->
+  <!-- META PIXEL CODE (ID: 1418629833467614) -->
   <script>
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -24,6 +24,44 @@
          src="https://www.facebook.com/tr?id=1418629833467614&ev=PageView&noscript=1"/>
   </noscript>
   <!-- End Meta Pixel Code -->
+
+  <!-- SUPABASE DASHBOARD TRACKER SCRIPT -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://nfqpsufusbzdfaclldut.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_L9xIG5fVx6miGJ8kCtULuw_QJYEO-C3";
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 1. Automatic Visitor Count (Page Load Hote Hi Dashboard me Jayega)
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await db.from('campaign_stats').insert([
+                { event_type: 'visitor', campaign: 'X SURE SHOTS CHANNEL' }
+            ]);
+            console.log('Visitor tracked successfully!');
+        } catch(err) {
+            console.error('Visitor Track Error:', err);
+        }
+    });
+
+    // 2. Button Click Handler (Dashboard me Click + Meta me Subscribe Event Bheje Ga)
+    async function handleTelegramClick(e) {
+        // Meta Ads Pixel Event Fire
+        if (typeof fbq !== 'undefined') {
+            fbq('track', 'Subscribe');
+            fbq('track', 'Lead');
+        }
+
+        // Supabase Database Click Entry
+        try {
+            await db.from('campaign_stats').insert([
+                { event_type: 'click', campaign: 'X SURE SHOTS CHANNEL' }
+            ]);
+        } catch(err) {
+            console.error('Click Track Error:', err);
+        }
+    }
+  </script>
 
   <style>
     * {
@@ -101,6 +139,7 @@
       color: #fff;
       background: linear-gradient(90deg, #ff6a00, #ff2d95);
       box-shadow: 0 12px 30px rgba(255, 87, 34, .35);
+      cursor: pointer;
     }
     .stats {
       display: grid;
@@ -143,8 +182,8 @@
     <h1>X SURE SHOTE</h1>
     <p>Join our premium Telegram community with a clean, modern experience and instant updates.</p>
 
-    <!-- TELEGRAM LINK -->
-    <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl">🚀 JOIN TELEGRAM</a>
+    <!-- MAIN TELEGRAM BUTTON (WITH TRACKING) -->
+    <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl" onclick="handleTelegramClick(event)">🚀 JOIN TELEGRAM</a>
 
     <div class="stats">
       <div class="stat"><b>24/7</b>Active</div>
@@ -158,8 +197,8 @@
       <div class="feature">🛡️ Secure & Mobile Friendly</div>
     </div>
 
-    <!-- SECONDARY JOIN BUTTON -->
-    <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl">JOIN NOW</a>
+    <!-- SECONDARY JOIN BUTTON (WITH TRACKING) -->
+    <a class="btn" href="https://t.me/+JasEYKHjpqxhMjFl" onclick="handleTelegramClick(event)">JOIN NOW</a>
   </div>
 </div>
 </body>
